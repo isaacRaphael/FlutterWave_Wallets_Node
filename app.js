@@ -90,7 +90,7 @@ try {
 app.get("/pay", async (req, res) => {
     const { email, amount} = req.body;
     if(!email || !amount){
-        res.sendStatus(400);
+        res.status(400).json({success : false , message : "invalid request body"});
     }else{
         try{
             const target_path = path.join(__dirname + "/index.html");
@@ -99,7 +99,7 @@ app.get("/pay", async (req, res) => {
             }
             const user = await User.findOne({email});
             if(!user){
-                res.sendStatus(404);
+                res.status(404).json({success : false , message : "user does not exist"});
             }
             fs.writeFileSync(target_path, PayString(email, `${user.first_name} ${user.last_name}`, amount));
             res.sendFile(target_path);
@@ -130,17 +130,13 @@ app.get("/response", async (req, res) => {
     const { status, currency, id, amount, customer } = response.data.data;
 
     // check if customer exist in our database
-    const user = await User.findOne({ email: customer.email });
-  
+    const user = await User.findOne({ email: customer.email }); 
     // check if user have a wallet, else create wallet
     const wallet = await validateUserWallet(user._id);
-  
     // create wallet transaction
     await createWalletTransaction(user._id, status, currency, amount);
-  
     // create transaction
     await createTransaction(user._id, id, status, currency, amount, customer);
-  
     await updateWallet(user._id, amount);
   
     return res.status(200).json({
