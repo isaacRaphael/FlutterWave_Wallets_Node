@@ -93,13 +93,16 @@ app.get("/pay", async (req, res) => {
         res.sendStatus(400);
     }else{
         try{
-            fs.unlinkSync(path.join(__dirname + "/index.html"));
+            const target_path = path.join(__dirname + "/index.html");
+            if(fs.existsSync(target_path)){
+                fs.unlinkSync(target_path);
+            }
             const user = await User.findOne({email});
             if(!user){
                 res.sendStatus(404);
             }
-            fs.writeFileSync(path.join(__dirname + "/index.html"), PayString(email, `${user.first_name} ${user.last_name}`, amount));
-            res.sendFile(path.join(__dirname + "/index.html"));
+            fs.writeFileSync(target_path, PayString(email, `${user.first_name} ${user.last_name}`, amount));
+            res.sendFile(target_path);
         }catch(err){
             console.log(err);
             res.sendStatus(500);
